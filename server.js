@@ -99,6 +99,7 @@ app.get("/scrape", function(req, res) {
 
 		console.log("Scrape finished.");
 		console.log(result);
+		
 		res.redirect("/");
 	});
 });
