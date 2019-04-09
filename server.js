@@ -1,13 +1,14 @@
 // Dependencies
 
 var express = require("express");
-var method = require("method-override");
+//var method = require("method-override");
 var body = require("body-parser");
 var exphbs = require("express-handlebars");
 var mongoose = require("mongoose");
-var logger = require("morgan");
+//var logger = require("morgan");
 var cheerio = require("cheerio");
-var request = require("request");
+var axios = require("axios");
+//var request = require("request");
 
 // Mongoose
 
@@ -35,14 +36,14 @@ db.once("open", function() {
 
 
 var app = express();
-var port = process.env.PORT || 3000;
+var port = process.env.PORT || 3050;
 
 // app set-ups
 
-app.use(logger("dev"));
+//app.use(logger("dev"));
 app.use(express.static("public"));
 app.use(body.urlencoded({extended: false}));
-app.use(method("_method"));
+//app.use(method("_method"));
 app.engine("handlebars", exphbs({defaultLayout: "main"}));
 app.set("view engine", "handlebars");
 
@@ -64,8 +65,8 @@ app.get("/", function(req, res) {
 });
 
 app.get("/scrape", function(req, res) {
-	request("https://www.foxbusiness.com/category/technology", function(error, response, html) {
-		var $ = cheerio.load(html);
+	axios.get("https://www.foxbusiness.com/category/technology").then (function(response) {
+		var $ = cheerio.load(response.data);
 		console.log($);
 		var result = {};
 		$("article.article-ct").each(function(i, element) {
@@ -73,7 +74,7 @@ app.get("/scrape", function(req, res) {
 			var link = $(element).find("a").attr("href");
 			var title = $(element).find("h3").text().trim();
 			var summary = $(element).find("p").text().trim();
-			var img = $(element).parent().find("ae-image").find("img").attr("src");
+			var img = $(element).parent().find("a").find("img").attr("src");
 			result.link = link;
 			result.title = title;
 			if (summary) {
@@ -105,7 +106,7 @@ app.get("/scrape", function(req, res) {
 app.get("/saved", function(req, res) {
 	Article.find({issaved: true}, null, {sort: {created: -1}}, function(err, data) {
 		if(data.length === 0) {
-			res.render("placeholder", {message: "You currently do not have any saved articles.  Please select an econimic article to save\"Save Article\"!"});
+			res.render("placeholder", {message: "You currently do not have any saved articles.  Please select an economic article to save\"Save Article\"!"});
 		}
 		else {
 			res.render("saved", {saved: data});
